@@ -4,355 +4,88 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <title>Loto Scanner</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --red: #E8251A;
-    --red-dark: #B01B12;
-    --green: #2A7A3B;
-    --cream: #F9F6EE;
-    --ink: #1A1A1A;
-    --muted: #6B6B6B;
-    --border: #D4CFBF;
-    --success: #2A7A3B;
-    --warn: #C07A10;
-    --error: #C0201A;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--cream);
-    color: var(--ink);
-    min-height: 100vh;
-  }
-
-  /* HEADER */
-  .header {
-    background: var(--red);
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-  .ball {
-    width: 38px; height: 38px;
-    background: white;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-    flex-shrink: 0;
-  }
-  .header-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 28px;
-    color: white;
-    letter-spacing: 2px;
-    line-height: 1;
-  }
-  .header-sub {
-    font-size: 11px;
-    color: rgba(255,255,255,0.75);
-    letter-spacing: 0.5px;
-    margin-top: 2px;
-  }
-
-  /* API KEY BANNER */
-  .api-banner {
-    background: #FEF9C3;
-    border-bottom: 1px solid #FDE68A;
-    padding: 10px 16px;
-    font-size: 13px;
-    color: #854D0E;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .api-banner input {
-    flex: 1;
-    min-width: 180px;
-    padding: 6px 10px;
-    border: 1px solid #FDE68A;
-    border-radius: 6px;
-    font-size: 12px;
-    font-family: monospace;
-    background: white;
-  }
-  .api-banner button {
-    padding: 6px 12px;
-    background: var(--red);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  /* MAIN */
-  .main {
-    padding: 20px 16px 40px;
-    max-width: 680px;
-    margin: 0 auto;
-  }
-
-  /* UPLOAD */
-  .upload-zone {
-    border: 2px dashed var(--border);
-    border-radius: 14px;
-    background: white;
-    padding: 28px 16px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color .2s, background .2s;
-    position: relative;
-  }
-  .upload-zone:hover { border-color: var(--red); background: #FFF8F8; }
-  .upload-zone input {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-  }
-  .upload-icon { font-size: 44px; margin-bottom: 10px; }
-  .upload-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-  .upload-sub { font-size: 13px; color: var(--muted); }
-
-  .preview-wrap {
-    margin-top: 14px;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    display: none;
-    background: #f0f0f0;
-  }
-  .preview-wrap img {
-    width: 100%;
-    display: block;
-    max-height: 280px;
-    object-fit: contain;
-  }
-
-  /* FORMAT */
-  .section-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 16px 0 8px;
-  }
-  .format-row {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-  .fmt-btn {
-    flex: 1;
-    min-width: 56px;
-    padding: 8px 4px;
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    background: white;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    text-align: center;
-    transition: all .15s;
-    color: var(--ink);
-  }
-  .fmt-btn:hover { border-color: var(--red); }
-  .fmt-btn.active { background: var(--red); color: white; border-color: var(--red); }
-  .fmt-label { font-size: 10px; display: block; opacity: 0.75; margin-top: 1px; }
-
-  /* SCAN BTN */
-  .scan-btn {
-    width: 100%;
-    margin-top: 16px;
-    padding: 16px;
-    background: var(--red);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 24px;
-    letter-spacing: 2px;
-    cursor: pointer;
-    transition: background .15s, transform .1s;
-  }
-  .scan-btn:hover { background: var(--red-dark); }
-  .scan-btn:active { transform: scale(0.98); }
-  .scan-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
-
-  /* STATUS */
-  .status-bar {
-    margin-top: 12px;
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 500;
-    display: none;
-    align-items: center;
-    gap: 8px;
-  }
-  .status-bar.info { display: flex; background: #EFF6FF; color: #1D4ED8; }
-  .status-bar.success { display: flex; background: #F0FDF4; color: #15803D; }
-  .status-bar.error { display: flex; background: #FEF2F2; color: #B91C1C; }
-  .spinner {
-    width: 16px; height: 16px;
-    border: 2px solid currentColor;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: spin .6s linear infinite;
-    flex-shrink: 0;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* RESULTS */
-  .results { margin-top: 24px; }
-  .results-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 20px;
-    letter-spacing: 1px;
-    color: var(--ink);
-    margin-bottom: 12px;
-    border-bottom: 2px solid var(--red);
-    padding-bottom: 6px;
-  }
-  .summary {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  .sum-card {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px;
-    text-align: center;
-  }
-  .sum-val {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 32px;
-    line-height: 1;
-  }
-  .sum-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
-  .sum-val.ok { color: var(--success); }
-  .sum-val.bad { color: var(--error); }
-  .sum-val.neutral { color: var(--ink); }
-
-  /* CARTON CARD */
-  .carton-card {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    margin-bottom: 14px;
-    overflow: hidden;
-  }
-  .carton-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 12px;
-    background: var(--ink);
-    color: white;
-  }
-  .carton-num {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 16px;
-    letter-spacing: 1px;
-  }
-  .carton-serial { font-size: 11px; color: rgba(255,255,255,0.55); }
-  .validity-badge {
-    font-size: 11px;
-    font-weight: 600;
-    padding: 3px 8px;
-    border-radius: 20px;
-  }
-  .valid { background: #DCFCE7; color: #15803D; }
-  .invalid { background: #FEE2E2; color: #B91C1C; }
-  .partial { background: #FEF9C3; color: #854D0E; }
-
-  .carton-body { padding: 10px 12px; }
-
-  /* LOTO GRID */
-  .loto-grid {
-    display: grid;
-    grid-template-columns: repeat(9, 1fr);
-    gap: 3px;
-    margin-bottom: 6px;
-  }
-  .loto-cell {
-    aspect-ratio: 1.1;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: clamp(8px, 2.2vw, 13px);
-    font-weight: 600;
-    border: 1px solid var(--border);
-  }
-  .loto-cell.has-num { background: white; color: var(--ink); }
-  .loto-cell.empty { background: #6BAE78; border-color: #5A9467; }
-  .loto-cell.error-cell { background: #FEE2E2; color: #B91C1C; border-color: #FECACA; }
-
-  .error-list {
-    font-size: 11px;
-    color: var(--warn);
-    margin-top: 6px;
-    padding: 6px 10px;
-    background: #FFFBEB;
-    border-radius: 6px;
-    border: 1px solid #FDE68A;
-  }
-
-  .json-toggle {
-    font-size: 11px;
-    color: var(--muted);
-    cursor: pointer;
-    text-decoration: underline;
-    margin-top: 8px;
-    display: inline-block;
-    background: none;
-    border: none;
-    padding: 0;
-    font-family: 'DM Sans', sans-serif;
-  }
-  .json-block {
-    display: none;
-    font-family: monospace;
-    font-size: 10px;
-    background: #F8F8F8;
-    border-radius: 6px;
-    padding: 8px;
-    margin-top: 6px;
-    overflow-x: auto;
-    color: #333;
-    white-space: pre;
-    border: 1px solid var(--border);
-  }
-
-  /* FOOTER */
-  .footer {
-    text-align: center;
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 32px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-  }
+:root {
+  --red:#E8251A;--red-dark:#B01B12;--green:#2A7A3B;
+  --cream:#F9F6EE;--ink:#1A1A1A;--muted:#6B6B6B;
+  --border:#D4CFBF;--error:#C0201A;--warn:#C07A10;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;}
+.header{background:var(--red);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
+.ball{width:38px;height:38px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.header-title{font-family:'Bebas Neue',sans-serif;font-size:28px;color:white;letter-spacing:2px;line-height:1;}
+.header-sub{font-size:11px;color:rgba(255,255,255,0.75);letter-spacing:.5px;margin-top:2px;}
+.api-banner{background:#FEF9C3;border-bottom:1px solid #FDE68A;padding:10px 16px;font-size:13px;color:#854D0E;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.api-banner input{flex:1;min-width:180px;padding:6px 10px;border:1px solid #FDE68A;border-radius:6px;font-size:12px;font-family:monospace;background:white;}
+.api-banner button{padding:6px 12px;background:var(--red);color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;}
+.main{padding:20px 16px 40px;max-width:680px;margin:0 auto;}
+.upload-zone{border:2px dashed var(--border);border-radius:14px;background:white;padding:28px 16px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative;}
+.upload-zone:hover{border-color:var(--red);background:#FFF8F8;}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{font-size:44px;margin-bottom:10px;}
+.upload-title{font-size:16px;font-weight:600;margin-bottom:4px;}
+.upload-sub{font-size:13px;color:var(--muted);}
+.preview-wrap{margin-top:14px;border-radius:10px;overflow:hidden;border:1px solid var(--border);display:none;background:#f0f0f0;}
+.preview-wrap img{width:100%;display:block;max-height:280px;object-fit:contain;}
+.section-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;}
+.format-row{display:flex;gap:6px;flex-wrap:wrap;}
+.fmt-btn{flex:1;min-width:56px;padding:8px 4px;border:1.5px solid var(--border);border-radius:8px;background:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;text-align:center;transition:all .15s;color:var(--ink);}
+.fmt-btn:hover{border-color:var(--red);}
+.fmt-btn.active{background:var(--red);color:white;border-color:var(--red);}
+.fmt-label{font-size:10px;display:block;opacity:.75;margin-top:1px;}
+.scan-btn{width:100%;margin-top:16px;padding:16px;background:var(--red);color:white;border:none;border-radius:12px;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;cursor:pointer;transition:background .15s,transform .1s;}
+.scan-btn:hover{background:var(--red-dark);}
+.scan-btn:active{transform:scale(0.98);}
+.scan-btn:disabled{background:#ccc;cursor:not-allowed;transform:none;}
+.status-bar{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:500;display:none;align-items:center;gap:8px;}
+.status-bar.info{display:flex;background:#EFF6FF;color:#1D4ED8;}
+.status-bar.success{display:flex;background:#F0FDF4;color:#15803D;}
+.status-bar.error{display:flex;background:#FEF2F2;color:#B91C1C;}
+.spinner{width:16px;height:16px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.results{margin-top:24px;}
+.results-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;margin-bottom:12px;border-bottom:2px solid var(--red);padding-bottom:6px;}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.sum-card{background:white;border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;}
+.sum-val{font-family:'Bebas Neue',sans-serif;font-size:32px;line-height:1;}
+.sum-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.sum-val.ok{color:var(--green);}
+.sum-val.bad{color:var(--error);}
+.sum-val.neutral{color:var(--ink);}
+.carton-card{background:white;border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden;}
+.carton-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--ink);color:white;}
+.carton-num{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;}
+.carton-serial{font-size:11px;color:rgba(255,255,255,.55);}
+.validity-badge{font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;}
+.vbadge-valid{background:#DCFCE7;color:#15803D;}
+.vbadge-partial{background:#FEF9C3;color:#854D0E;}
+.vbadge-invalid{background:#FEE2E2;color:#B91C1C;}
+.carton-body{padding:10px 12px;}
+.loto-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:3px;margin-bottom:6px;}
+.loto-cell{aspect-ratio:1.1;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:clamp(8px,2.2vw,13px);font-weight:600;border:1px solid var(--border);}
+.loto-cell.has-num{background:white;color:var(--ink);}
+.loto-cell.empty{background:#6BAE78;border-color:#5A9467;}
+.loto-cell.error-cell{background:#FEE2E2;color:#B91C1C;border-color:#FECACA;}
+.error-list{font-size:11px;color:var(--warn);margin-top:6px;padding:6px 10px;background:#FFFBEB;border-radius:6px;border:1px solid #FDE68A;}
+.edit-btn{margin-top:8px;padding:8px 14px;background:#FEF9C3;border:1.5px solid #F59E0B;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:#92400E;cursor:pointer;display:block;width:100%;text-align:center;}
+.edit-btn:hover{background:#FDE68A;}
+.editor-panel{display:none;margin-top:10px;background:#FFFBEB;border:1.5px solid #F59E0B;border-radius:10px;padding:12px;}
+.editor-panel.open{display:block;}
+.editor-label{font-size:11px;font-weight:600;color:#92400E;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.erow{display:flex;align-items:center;gap:5px;margin-bottom:8px;}
+.erlbl{font-size:11px;font-weight:600;color:var(--muted);width:28px;flex-shrink:0;}
+.eni{width:46px;padding:6px 2px;text-align:center;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;background:white;}
+.eni.err{border-color:var(--error);background:#FEF2F2;color:var(--error);}
+.eni.ok{border-color:#4ADE80;}
+.efeedback{font-size:11px;color:var(--error);min-height:16px;margin:4px 0 6px;}
+.editor-validate-btn{width:100%;margin-top:4px;padding:10px;background:var(--green);color:white;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;cursor:pointer;}
+.editor-validate-btn:hover{background:#1F5C2C;}
+.footer{text-align:center;font-size:11px;color:var(--muted);margin-top:32px;padding-top:16px;border-top:1px solid var(--border);}
 </style>
 </head>
 <body>
-
 <div class="header">
   <div class="ball">🎱</div>
   <div>
@@ -361,8 +94,8 @@
   </div>
 </div>
 
-<div class="api-banner" id="apiBanner">
-  <span>🔑 Clé API Anthropic :</span>
+<div class="api-banner">
+  <span>🔑 Clé API :</span>
   <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." />
   <button onclick="saveKey()">Enregistrer</button>
   <span id="keyStatus"></span>
@@ -375,10 +108,7 @@
     <div class="upload-title">Photo ou scan de tes cartons</div>
     <div class="upload-sub">Appuie ici pour prendre une photo ou choisir une image</div>
   </div>
-
-  <div class="preview-wrap" id="previewWrap">
-    <img id="previewImg" src="" alt="aperçu" />
-  </div>
+  <div class="preview-wrap" id="previewWrap"><img id="previewImg" src="" alt="apercu" /></div>
 
   <div class="section-label">Nombre de cartons sur la feuille</div>
   <div class="format-row" id="formatRow">
@@ -388,10 +118,10 @@
     <button class="fmt-btn" data-n="12">12<span class="fmt-label">cartons</span></button>
     <button class="fmt-btn" data-n="18">18<span class="fmt-label">cartons</span></button>
     <button class="fmt-btn" data-n="24">24<span class="fmt-label">cartons</span></button>
-    <button class="fmt-btn" data-n="privilege">Carte<span class="fmt-label">Privilège</span></button>
+    <button class="fmt-btn" data-n="privilege">Carte<span class="fmt-label">Privilege</span></button>
   </div>
 
-  <button class="scan-btn" id="scanBtn" disabled>⬆ SCANNER LES CARTONS</button>
+  <button class="scan-btn" id="scanBtn" disabled>SCANNER LES CARTONS</button>
 
   <div class="status-bar" id="statusBar">
     <div class="spinner" id="statusSpinner"></div>
@@ -399,11 +129,11 @@
   </div>
 
   <div class="results" id="results" style="display:none">
-    <div class="results-title" id="resultsTitle">RÉSULTATS</div>
+    <div class="results-title" id="resultsTitle">RESULTATS</div>
     <div class="summary">
       <div class="sum-card"><div class="sum-val neutral" id="sumTotal">0</div><div class="sum-lbl">Lus</div></div>
       <div class="sum-card"><div class="sum-val ok" id="sumOk">0</div><div class="sum-lbl">Valides</div></div>
-      <div class="sum-card"><div class="sum-val bad" id="sumErr">0</div><div class="sum-lbl">À vérifier</div></div>
+      <div class="sum-card"><div class="sum-val bad" id="sumErr">0</div><div class="sum-lbl">A verifier</div></div>
     </div>
     <div id="cartonsList"></div>
   </div>
@@ -412,331 +142,338 @@
 </div>
 
 <script>
-  let selectedFile = null;
-  let selectedFormat = 'auto';
-  let base64Data = null;
-  let apiKey = localStorage.getItem('loto_api_key') || '';
+var selectedFile = null;
+var selectedFormat = 'auto';
+var base64Data = null;
+var apiKey = localStorage.getItem('loto_api_key') || '';
+var allCartonsData = [];
+var COL_RANGES = [[1,9],[10,19],[20,29],[30,39],[40,49],[50,59],[60,69],[70,79],[80,90]];
 
-  // Init API key display
-  if (apiKey) {
-    document.getElementById('apiKeyInput').value = apiKey;
-    document.getElementById('keyStatus').textContent = '✓ Clé enregistrée';
-    document.getElementById('keyStatus').style.color = '#15803D';
-  }
+if (apiKey) {
+  document.getElementById('apiKeyInput').value = apiKey;
+  document.getElementById('keyStatus').textContent = 'Cle enregistree';
+  document.getElementById('keyStatus').style.color = '#15803D';
+}
 
-  function saveKey() {
-    const val = document.getElementById('apiKeyInput').value.trim();
-    if (!val.startsWith('sk-ant')) {
-      alert('La clé doit commencer par sk-ant-...');
-      return;
+function saveKey() {
+  var val = document.getElementById('apiKeyInput').value.trim();
+  if (!val.startsWith('sk-ant')) { alert('La cle doit commencer par sk-ant-...'); return; }
+  apiKey = val;
+  localStorage.setItem('loto_api_key', val);
+  document.getElementById('keyStatus').textContent = 'Enregistree';
+  document.getElementById('keyStatus').style.color = '#15803D';
+}
+
+document.getElementById('formatRow').addEventListener('click', function(e) {
+  var btn = e.target.closest('.fmt-btn');
+  if (!btn) return;
+  document.querySelectorAll('.fmt-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  selectedFormat = btn.dataset.n;
+});
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  var file = e.target.files[0];
+  if (file) handleFile(file);
+});
+
+function handleFile(file) {
+  selectedFile = file;
+  var url = URL.createObjectURL(file);
+  document.getElementById('previewImg').src = url;
+  document.getElementById('previewWrap').style.display = 'block';
+  document.getElementById('scanBtn').disabled = false;
+
+  var img = new Image();
+  img.onload = function() {
+    var MAX = 2400, w = img.width, h = img.height;
+    if (w > MAX || h > MAX) {
+      if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+      else { w = Math.round(w * MAX / h); h = MAX; }
     }
-    apiKey = val;
-    localStorage.setItem('loto_api_key', val);
-    document.getElementById('keyStatus').textContent = '✓ Enregistrée';
-    document.getElementById('keyStatus').style.color = '#15803D';
-  }
+    var canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    var quality = 0.85, dataUrl = canvas.toDataURL('image/jpeg', quality);
+    while (dataUrl.length * 0.75 > 4.5 * 1024 * 1024 && quality > 0.3) {
+      quality -= 0.1;
+      dataUrl = canvas.toDataURL('image/jpeg', quality);
+    }
+    base64Data = dataUrl.split(',')[1];
+    selectedFile = { type: 'image/jpeg' };
+  };
+  img.src = url;
+}
 
-  // Format buttons
-  document.getElementById('formatRow').addEventListener('click', e => {
-    const btn = e.target.closest('.fmt-btn');
-    if (!btn) return;
-    document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedFormat = btn.dataset.n;
-  });
+document.getElementById('scanBtn').addEventListener('click', function() {
+  if (!base64Data) return;
+  if (!apiKey) { alert('Entre ta cle API Anthropic en haut de la page.'); return; }
+  runScan();
+});
 
-  // File input
-  document.getElementById('fileInput').addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (file) handleFile(file);
-  });
+function setStatus(type, msg, spin) {
+  var bar = document.getElementById('statusBar');
+  bar.className = 'status-bar ' + type;
+  document.getElementById('statusSpinner').style.display = spin ? 'block' : 'none';
+  document.getElementById('statusText').textContent = msg;
+}
 
-  function handleFile(file) {
-    selectedFile = file;
-    const url = URL.createObjectURL(file);
-    document.getElementById('previewImg').src = url;
-    document.getElementById('previewWrap').style.display = 'block';
+function runScan() {
+  document.getElementById('scanBtn').disabled = true;
+  document.getElementById('results').style.display = 'none';
+  var n = selectedFormat === 'auto' ? 0 : (selectedFormat === 'privilege' ? 1 : parseInt(selectedFormat));
+  setStatus('info', 'Envoi a Claude Vision...', true);
+
+  var sys = 'Tu es un expert en lecture de cartons de loto francais.\n'
+    + 'Chaque carton a EXACTEMENT 3 lignes et 5 numeros par ligne (15 numeros au total, de 1 a 90).\n'
+    + 'Cases vides = ovales gris ou cases blanches sans chiffre, IGNORE-LES.\n'
+    + 'Numeros colles visuellement comme "1228" = deux numeros separes "12" et "28".\n'
+    + 'Lis de gauche a droite sur chaque ligne, donne uniquement les 5 numeros presents.\n'
+    + 'Reponds UNIQUEMENT avec un tableau JSON pur, sans texte, sans markdown, sans backticks.\n'
+    + 'Exemple: [{"id":1,"line1":[12,28,47,55,64],"line2":[10,33,46,77,84],"line3":[2,27,31,68,74]}]';
+
+  var usr = 'Cette image contient ' + (n > 0 ? n : 'plusieurs') + ' cartons de loto.\n'
+    + 'Lis chaque carton et donne exactement 5 numeros par ligne.\n'
+    + 'Reponds uniquement avec le tableau JSON, rien d\'autre.';
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-opus-4-5',
+      max_tokens: 6000,
+      system: sys,
+      messages: [{ role: 'user', content: [
+        { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64Data } },
+        { type: 'text', text: usr }
+      ]}]
+    })
+  })
+  .then(function(r) {
+    if (!r.ok) return r.json().then(function(e) { throw new Error(e.error && e.error.message || 'Erreur API ' + r.status); });
+    return r.json();
+  })
+  .then(function(data) {
+    var raw = (data.content.find(function(b) { return b.type === 'text'; }) || {}).text || '';
+    var clean = raw.replace(/```json|```/g, '').trim();
+    var match = clean.match(/\[[\s\S]*\]/);
+    if (!match) throw new Error('Pas de JSON trouve. Ameliore la qualite de la photo.');
+    setStatus('info', 'Reconstruction des grilles...', true);
+    var cartons = JSON.parse(match[0]);
+    allCartonsData = cartons.map(function(c, i) {
+      c.id = c.id || i + 1;
+      c.serial = c.serial || '';
+      c = buildGridFromLines(c);
+      return validateCarton(c);
+    });
+    renderResults();
+    var ok = allCartonsData.filter(function(c) { return c.valid; }).length;
+    setStatus('success', allCartonsData.length + ' carton(s) lus — ' + ok + ' valides');
+  })
+  .catch(function(e) {
+    setStatus('error', 'Erreur : ' + e.message);
+  })
+  .finally(function() {
     document.getElementById('scanBtn').disabled = false;
+  });
+}
 
-    // Compress image to stay under 5MB API limit
-    const img = new Image();
-    img.onload = () => {
-      const MAX_PX = 2400; // max dimension
-      let w = img.width, h = img.height;
-      if (w > MAX_PX || h > MAX_PX) {
-        if (w > h) { h = Math.round(h * MAX_PX / w); w = MAX_PX; }
-        else { w = Math.round(w * MAX_PX / h); h = MAX_PX; }
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-
-      // Try quality 0.85 first, reduce if still too large
-      let quality = 0.85;
-      let dataUrl = canvas.toDataURL('image/jpeg', quality);
-      while (dataUrl.length * 0.75 > 4.5 * 1024 * 1024 && quality > 0.3) {
-        quality -= 0.1;
-        dataUrl = canvas.toDataURL('image/jpeg', quality);
-      }
-      base64Data = dataUrl.split(',')[1];
-      selectedFile = { type: 'image/jpeg' }; // force jpeg after compression
-      const sizeMB = (base64Data.length * 0.75 / 1024 / 1024).toFixed(1);
-      document.getElementById('previewImg').src = dataUrl;
-      document.getElementById('statusText') && (document.getElementById('statusBar').className = '');
-      console.log(`Image compressée : ${w}×${h}px, ~${sizeMB} MB, qualité ${Math.round(quality*100)}%`);
-    };
-    img.src = url;
+function getCol(num) {
+  for (var i = 0; i < COL_RANGES.length; i++) {
+    if (num >= COL_RANGES[i][0] && num <= COL_RANGES[i][1]) return i;
   }
+  return -1;
+}
 
-  document.getElementById('scanBtn').addEventListener('click', async () => {
-    if (!base64Data) return;
-    if (!apiKey) { alert('Entre ta clé API Anthropic en haut de la page.'); return; }
-    await runScan();
+function buildGridFromLines(carton) {
+  var rows = [[null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null]];
+  var errors = [], allNums = [];
+  var lines = [carton.line1 || [], carton.line2 || [], carton.line3 || []];
+  lines.forEach(function(line, ri) {
+    if (line.length !== 5) errors.push('Ligne ' + (ri+1) + ' : ' + line.length + ' numeros lus (attendu 5)');
+    line.forEach(function(num) {
+      if (num < 1 || num > 90) { errors.push('Numero invalide : ' + num); return; }
+      if (allNums.indexOf(num) >= 0) { errors.push('Doublon : ' + num); return; }
+      allNums.push(num);
+      var col = getCol(num);
+      if (col < 0) { errors.push('Hors plage : ' + num); return; }
+      if (rows[ri][col] !== null) {
+        errors.push('Collision col ' + (col+1) + ' ligne ' + (ri+1) + ' : ' + rows[ri][col] + ' et ' + num);
+      } else { rows[ri][col] = num; }
+    });
+  });
+  carton.rows = rows;
+  carton.errors = errors;
+  carton.valid = errors.length === 0;
+  return carton;
+}
+
+function validateCarton(carton) {
+  var errors = (carton.errors || []).slice();
+  var allNums = [];
+  if (!carton.rows || carton.rows.length !== 3) {
+    carton.valid = false; carton.errors = ['Structure incorrecte']; return carton;
+  }
+  carton.rows.forEach(function(row, ri) {
+    var nums = (row || []).filter(function(v) { return v !== null; });
+    if (nums.length !== 5 && !errors.some(function(e) { return e.indexOf('Ligne ' + (ri+1)) >= 0; })) {
+      errors.push('Ligne ' + (ri+1) + ' : ' + nums.length + ' numeros (attendu 5)');
+    }
+    (row || []).forEach(function(val, ci) {
+      if (val === null) return;
+      var min = COL_RANGES[ci][0], max = COL_RANGES[ci][1];
+      if (val < min || val > max) errors.push(val + ' hors plage col ' + (ci+1) + ' (' + min + '-' + max + ')');
+      if (allNums.indexOf(val) >= 0) { if (errors.indexOf('Doublon : ' + val) < 0) errors.push('Doublon : ' + val); }
+      else allNums.push(val);
+    });
+  });
+  carton.valid = errors.length === 0;
+  carton.errors = errors;
+  return carton;
+}
+
+function buildGridHTML(carton) {
+  var html = '';
+  (carton.rows || []).forEach(function(row) {
+    (row || []).forEach(function(val, ci) {
+      if (val === null || val === undefined) {
+        html += '<div class="loto-cell empty"></div>';
+      } else {
+        var min = COL_RANGES[ci][0], max = COL_RANGES[ci][1];
+        html += '<div class="loto-cell ' + (val < min || val > max ? 'error-cell' : 'has-num') + '">' + val + '</div>';
+      }
+    });
+  });
+  return html;
+}
+
+function getCardLines(carton) {
+  return [
+    carton.line1 || (carton.rows[0] || []).filter(function(v) { return v !== null; }),
+    carton.line2 || (carton.rows[1] || []).filter(function(v) { return v !== null; }),
+    carton.line3 || (carton.rows[2] || []).filter(function(v) { return v !== null; })
+  ];
+}
+
+function renderCartonCard(carton, idx) {
+  var vc = carton.valid ? 'vbadge-valid' : (carton.errors.length <= 2 ? 'vbadge-partial' : 'vbadge-invalid');
+  var vl = carton.valid ? 'Valide' : (carton.errors.length <= 2 ? 'Incertain' : 'Erreur');
+  var errHTML = carton.errors.length > 0
+    ? '<div class="error-list">' + carton.errors.slice(0,4).join(' · ') + (carton.errors.length > 4 ? ' (+' + (carton.errors.length-4) + ')' : '') + '</div>' : '';
+
+  var lines = getCardLines(carton);
+  var editorRows = '';
+  ['L1','L2','L3'].forEach(function(lbl, ri) {
+    var inputs = '';
+    for (var k = 0; k < 5; k++) {
+      var v = (lines[ri] || [])[k] !== undefined ? (lines[ri] || [])[k] : '';
+      inputs += '<input class="eni" type="number" min="1" max="90" value="' + v + '" oninput="liveCheck(' + idx + ')" id="ei_' + idx + '_' + ri + '_' + k + '">';
+    }
+    editorRows += '<div class="erow"><span class="erlbl">' + lbl + '</span>' + inputs + '</div>';
   });
 
-  function setStatus(type, msg, showSpinner = false) {
-    const bar = document.getElementById('statusBar');
-    bar.className = 'status-bar ' + type;
-    document.getElementById('statusSpinner').style.display = showSpinner ? 'block' : 'none';
-    document.getElementById('statusText').textContent = msg;
-  }
+  var editSection = carton.valid ? '' :
+    '<button class="edit-btn" onclick="toggleEditor(\'ep_' + idx + '\')">Corriger ce carton</button>' +
+    '<div class="editor-panel" id="ep_' + idx + '">' +
+    '<div class="editor-label">5 numeros par ligne — corrige puis valide</div>' +
+    editorRows +
+    '<div class="efeedback" id="efb_' + idx + '"></div>' +
+    '<button class="editor-validate-btn" onclick="applyEdit(' + idx + ')">VALIDER LA CORRECTION</button>' +
+    '</div>';
 
-  async function callClaude(imageData, mediaType, nbCartons, startId) {
-    const systemPrompt = `Tu es un expert en lecture de cartons de loto français.
-Chaque carton a EXACTEMENT 3 lignes et 5 numéros par ligne (15 numéros au total, de 1 à 90).
-Cases vides = ovales gris ou cases blanches sans chiffre — IGNORE-LES complètement.
-Numéros collés visuellement comme "1228" = deux numéros séparés "12" et "28".
-Lis de gauche à droite sur chaque ligne, donne uniquement les 5 numéros présents par ligne.
+  var card = document.createElement('div');
+  card.className = 'carton-card';
+  card.id = 'card_' + idx;
+  card.innerHTML =
+    '<div class="carton-header">' +
+      '<div>' +
+        '<div class="carton-num">Carton N' + (carton.id || idx+1) + '</div>' +
+        (carton.serial ? '<div class="carton-serial">Serie ' + carton.serial + '</div>' : '') +
+      '</div>' +
+      '<span class="validity-badge ' + vc + '">' + vl + '</span>' +
+    '</div>' +
+    '<div class="carton-body">' +
+      '<div class="loto-grid">' + buildGridHTML(carton) + '</div>' +
+      errHTML + editSection +
+    '</div>';
+  return card;
+}
 
-Réponds UNIQUEMENT avec du JSON pur, sans texte avant ou après, sans markdown, sans backticks.
-Format exact (exemple pour 2 cartons) :
-[{"id":1,"line1":[12,28,47,55,64],"line2":[10,33,46,77,84],"line3":[2,27,31,68,74]},{"id":2,"line1":[9,22,40,50,86],"line2":[20,34,65,72,89],"line3":[1,16,35,57,63]}]`;
+function renderResults() {
+  var total = allCartonsData.length;
+  var ok = allCartonsData.filter(function(c) { return c.valid; }).length;
+  document.getElementById('sumTotal').textContent = total;
+  document.getElementById('sumOk').textContent = ok;
+  document.getElementById('sumErr').textContent = total - ok;
+  document.getElementById('resultsTitle').textContent = total + ' CARTON(S) - RESULTATS';
+  var list = document.getElementById('cartonsList');
+  list.innerHTML = '';
+  allCartonsData.forEach(function(c, i) { list.appendChild(renderCartonCard(c, i)); });
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
 
-    const userPrompt = `Cette image contient ${nbCartons} cartons de loto numérotés de ${startId} à ${startId + nbCartons - 1}.
-Lis chaque carton et donne exactement 5 numéros par ligne.
-Réponds uniquement avec le tableau JSON, rien d'autre.`;
+function updateSummary() {
+  var total = allCartonsData.length;
+  var ok = allCartonsData.filter(function(c) { return c.valid; }).length;
+  document.getElementById('sumTotal').textContent = total;
+  document.getElementById('sumOk').textContent = ok;
+  document.getElementById('sumErr').textContent = total - ok;
+}
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-opus-4-5',
-        max_tokens: 4000,
-        system: systemPrompt,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageData } },
-            { type: 'text', text: userPrompt }
-          ]
-        }]
-      })
-    });
+function toggleEditor(id) {
+  document.getElementById(id).classList.toggle('open');
+}
 
-    if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.error?.message || 'Erreur API ' + response.status);
+function liveCheck(idx) {
+  var allNums = [], msgs = [];
+  for (var ri = 0; ri < 3; ri++) {
+    var count = 0;
+    for (var k = 0; k < 5; k++) {
+      var el = document.getElementById('ei_' + idx + '_' + ri + '_' + k);
+      if (!el) continue;
+      var v = parseInt(el.value);
+      if (isNaN(v) || v < 1 || v > 90) { el.className = 'eni err'; continue; }
+      if (allNums.indexOf(v) >= 0) { el.className = 'eni err'; msgs.push('Doublon: ' + v); continue; }
+      allNums.push(v); el.className = 'eni ok'; count++;
     }
-
-    const data = await response.json();
-    const raw = data.content.find(b => b.type === 'text')?.text || '';
-    const clean = raw.replace(/```json|```/g, '').trim();
-
-    // Extract JSON array robustly
-    const match = clean.match(/\[[\s\S]*\]/);
-    if (!match) throw new Error('Pas de JSON trouvé dans la réponse. Réessaie ou améliore la qualité photo.');
-    return JSON.parse(match[0]);
+    if (count !== 5) msgs.push('L' + (ri+1) + ': ' + count + '/5');
   }
+  var fb = document.getElementById('efb_' + idx);
+  if (fb) fb.textContent = msgs.join(' · ');
+}
 
-  async function runScan() {
-    document.getElementById('scanBtn').disabled = true;
-    document.getElementById('results').style.display = 'none';
-    setStatus('info', 'Envoi de l\'image à Claude Vision...', true);
-
-    const n = selectedFormat === 'auto' ? 0 : (selectedFormat === 'privilege' ? 1 : parseInt(selectedFormat));
-    const mediaType = selectedFile.type || 'image/jpeg';
-
-    try {
-      let allCartons = [];
-
-      if (n <= 6 || n === 0) {
-        // Single call for 1-6 cartons or auto
-        const label = n === 0 ? 'tous les' : n;
-        setStatus('info', `Lecture de ${label} carton(s)...`, true);
-        const cartons = await callClaude(base64Data, mediaType, n || 6, 1);
-        allCartons = cartons;
-      } else {
-        // Split into batches of 6 for 12/18/24 cartons
-        // For multi-carton sheets we call once but ask for all
-        // and parse robustly
-        setStatus('info', `Lecture de ${n} cartons (peut prendre 15-20s)...`, true);
-        const cartons = await callClaude(base64Data, mediaType, n, 1);
-        allCartons = cartons;
-      }
-
-      setStatus('info', 'Reconstruction des grilles...', true);
-
-      const processed = allCartons.map((c, i) => {
-        c.id = c.id || (i + 1);
-        c.serial = c.serial || '';
-        c = buildGridFromLines(c);
-        return validateCarton(c);
-      });
-
-      const result = {
-        format_detected: `${processed.length} carton(s)`,
-        cartons: processed
-      };
-
-      renderResults(result);
-      const ok = processed.filter(c => c.valid).length;
-      setStatus('success', `✓ ${processed.length} carton(s) lus — ${ok} valides`);
-
-    } catch(e) {
-      setStatus('error', '❌ ' + e.message);
-    } finally {
-      document.getElementById('scanBtn').disabled = false;
+function applyEdit(idx) {
+  var lines = [[], [], []], allNums = [], valid = true;
+  for (var ri = 0; ri < 3; ri++) {
+    for (var k = 0; k < 5; k++) {
+      var el = document.getElementById('ei_' + idx + '_' + ri + '_' + k);
+      var v = parseInt(el && el.value);
+      if (isNaN(v) || v < 1 || v > 90 || allNums.indexOf(v) >= 0) { valid = false; break; }
+      allNums.push(v); lines[ri].push(v);
     }
+    if (lines[ri].length !== 5) valid = false;
+    if (!valid) break;
   }
-
-  function buildGridFromLines(carton) {
-    // Place each number in its correct column based on value range
-    const colRanges = [[1,9],[10,19],[20,29],[30,39],[40,49],[50,59],[60,69],[70,79],[80,90]];
-    const rows = [[null,null,null,null,null,null,null,null,null],
-                  [null,null,null,null,null,null,null,null,null],
-                  [null,null,null,null,null,null,null,null,null]];
-
-    function getCol(num) {
-      for (let i = 0; i < colRanges.length; i++) {
-        if (num >= colRanges[i][0] && num <= colRanges[i][1]) return i;
-      }
-      return -1;
-    }
-
-    const lines = [carton.line1 || [], carton.line2 || [], carton.line3 || []];
-    const errors = [];
-    const allNums = [];
-
-    lines.forEach((line, ri) => {
-      if (line.length !== 5) errors.push(`Ligne ${ri+1} : ${line.length} numéros lus (attendu 5)`);
-      line.forEach(num => {
-        if (num < 1 || num > 90) { errors.push(`Numéro invalide : ${num}`); return; }
-        if (allNums.includes(num)) { errors.push(`Doublon : ${num}`); return; }
-        allNums.push(num);
-        const col = getCol(num);
-        if (col === -1) { errors.push(`Numéro hors plage : ${num}`); return; }
-        if (rows[ri][col] !== null) {
-          errors.push(`Collision col ${col+1} ligne ${ri+1} : ${rows[ri][col]} et ${num}`);
-        } else {
-          rows[ri][col] = num;
-        }
-      });
-    });
-
-    carton.rows = rows;
-    carton.valid = errors.length === 0;
-    carton.errors = errors;
-    return carton;
+  if (!valid) {
+    var fb = document.getElementById('efb_' + idx);
+    if (fb) fb.textContent = 'Corrige toutes les erreurs avant de valider.';
+    return;
   }
-
-  function validateCarton(carton) {
-    const errors = [...(carton.errors || [])];
-    const ranges = [[1,9],[10,19],[20,29],[30,39],[40,49],[50,59],[60,69],[70,79],[80,90]];
-    const allNums = [];
-
-    if (!carton.rows || carton.rows.length !== 3) {
-      errors.push('Structure incorrecte : doit avoir 3 lignes');
-      carton.valid = false; carton.errors = errors; return carton;
-    }
-
-    carton.rows.forEach((row, ri) => {
-      if (!row || row.length !== 9) { errors.push(`Ligne ${ri+1} : longueur incorrecte`); return; }
-      const nums = row.filter(v => v !== null && v !== undefined);
-      if (nums.length !== 5) errors.push(`Ligne ${ri+1} : ${nums.length} numéros (attendu 5)`);
-      row.forEach((val, ci) => {
-        if (val === null || val === undefined) return;
-        const [min, max] = ranges[ci];
-        if (val < min || val > max) errors.push(`${val} en col ${ci+1} (attendu ${min}-${max})`);
-        if (allNums.includes(val)) errors.push(`Doublon : ${val}`);
-        else allNums.push(val);
-      });
-    });
-
-    carton.valid = errors.length === 0;
-    carton.errors = errors;
-    return carton;
-  }
-
-  function renderResults(parsed) {
-    const total = parsed.cartons.length;
-    const ok = parsed.cartons.filter(c => c.valid).length;
-    const bad = total - ok;
-
-    document.getElementById('sumTotal').textContent = total;
-    document.getElementById('sumOk').textContent = ok;
-    document.getElementById('sumErr').textContent = bad;
-    document.getElementById('resultsTitle').textContent = (parsed.format_detected || total + ' cartons').toUpperCase() + ' — RÉSULTATS';
-
-    const list = document.getElementById('cartonsList');
-    list.innerHTML = '';
-
-    parsed.cartons.forEach((carton, idx) => {
-      const vc = carton.valid ? 'valid' : (carton.errors.length <= 2 ? 'partial' : 'invalid');
-      const vl = carton.valid ? '✓ Valide' : (carton.errors.length <= 2 ? '⚠ Incertain' : '✗ Erreur');
-
-      const ranges = [[1,9],[10,19],[20,29],[30,39],[40,49],[50,59],[60,69],[70,79],[80,90]];
-      let gridHTML = '';
-      if (carton.rows && carton.rows.length === 3) {
-        carton.rows.forEach(row => {
-          (row || []).forEach((val, ci) => {
-            if (val === null || val === undefined) {
-              gridHTML += `<div class="loto-cell empty"></div>`;
-            } else {
-              const [min, max] = ranges[ci] || [1, 90];
-              const isErr = val < min || val > max;
-              gridHTML += `<div class="loto-cell ${isErr ? 'error-cell' : 'has-num'}">${val}</div>`;
-            }
-          });
-        });
-      }
-
-      const errHTML = carton.errors.length > 0
-        ? `<div class="error-list">⚠ ${carton.errors.slice(0,5).join(' · ')}${carton.errors.length > 5 ? ` (+ ${carton.errors.length-5} autres)` : ''}</div>` : '';
-
-      const jsonId = 'json_' + idx;
-      const card = document.createElement('div');
-      card.className = 'carton-card';
-      card.innerHTML = `
-        <div class="carton-header">
-          <div>
-            <div class="carton-num">Carton N°${carton.id || idx + 1}</div>
-            ${carton.serial ? `<div class="carton-serial">Série ${carton.serial}</div>` : ''}
-          </div>
-          <span class="validity-badge ${vc}">${vl}</span>
-        </div>
-        <div class="carton-body">
-          <div class="loto-grid">${gridHTML}</div>
-          ${errHTML}
-          <button class="json-toggle" onclick="toggleJson('${jsonId}')">Voir JSON brut</button>
-          <div class="json-block" id="${jsonId}">${JSON.stringify(carton, null, 2)}</div>
-        </div>
-      `;
-      list.appendChild(card);
-    });
-
-    document.getElementById('results').style.display = 'block';
-    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
-  }
-
-  function toggleJson(id) {
-    const el = document.getElementById(id);
-    el.style.display = el.style.display === 'block' ? 'none' : 'block';
-  }
+  var c = allCartonsData[idx];
+  c.line1 = lines[0]; c.line2 = lines[1]; c.line3 = lines[2];
+  c = buildGridFromLines(c);
+  c = validateCarton(c);
+  allCartonsData[idx] = c;
+  var oldCard = document.getElementById('card_' + idx);
+  oldCard.parentNode.replaceChild(renderCartonCard(c, idx), oldCard);
+  updateSummary();
+}
 </script>
 </body>
 </html>

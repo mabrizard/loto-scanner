@@ -501,83 +501,101 @@
     document.getElementById('statusText').textContent = msg;
   }
 
+  async function callClaude(imageData, mediaType, nbCartons, startId) {
+    const systemPrompt = `Tu es un expert en lecture de cartons de loto français.
+Chaque carton a EXACTEMENT 3 lignes et 5 numéros par ligne (15 numéros au total, de 1 à 90).
+Cases vides = ovales gris ou cases blanches sans chiffre — IGNORE-LES complètement.
+Numéros collés visuellement comme "1228" = deux numéros séparés "12" et "28".
+Lis de gauche à droite sur chaque ligne, donne uniquement les 5 numéros présents par ligne.
+
+Réponds UNIQUEMENT avec du JSON pur, sans texte avant ou après, sans markdown, sans backticks.
+Format exact (exemple pour 2 cartons) :
+[{"id":1,"line1":[12,28,47,55,64],"line2":[10,33,46,77,84],"line3":[2,27,31,68,74]},{"id":2,"line1":[9,22,40,50,86],"line2":[20,34,65,72,89],"line3":[1,16,35,57,63]}]`;
+
+    const userPrompt = `Cette image contient ${nbCartons} cartons de loto numérotés de ${startId} à ${startId + nbCartons - 1}.
+Lis chaque carton et donne exactement 5 numéros par ligne.
+Réponds uniquement avec le tableau JSON, rien d'autre.`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: 4000,
+        system: systemPrompt,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageData } },
+            { type: 'text', text: userPrompt }
+          ]
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || 'Erreur API ' + response.status);
+    }
+
+    const data = await response.json();
+    const raw = data.content.find(b => b.type === 'text')?.text || '';
+    const clean = raw.replace(/```json|```/g, '').trim();
+
+    // Extract JSON array robustly
+    const match = clean.match(/\[[\s\S]*\]/);
+    if (!match) throw new Error('Pas de JSON trouvé dans la réponse. Réessaie ou améliore la qualité photo.');
+    return JSON.parse(match[0]);
+  }
+
   async function runScan() {
     document.getElementById('scanBtn').disabled = true;
     document.getElementById('results').style.display = 'none';
     setStatus('info', 'Envoi de l\'image à Claude Vision...', true);
 
-    const formatHint = selectedFormat === 'auto'
-      ? 'Détecte automatiquement combien de cartons sont présents (1, 6, 12, 18, ou 24).'
-      : selectedFormat === 'privilege'
-      ? 'C\'est une Carte Privilège (format carte bancaire plastifiée, un seul carton 9 colonnes × 3 lignes).'
-      : `La feuille contient exactement ${selectedFormat} cartons.`;
-
-    const systemPrompt = `Tu es un expert en lecture de cartons de loto français.
-
-RÈGLES :
-- Chaque carton contient EXACTEMENT 15 numéros : 5 par ligne, 3 lignes
-- Les numéros vont de 1 à 90, jamais de doublon
-- Cases vides = ovales gris, cases colorées, ou cases blanches sans chiffre — IGNORE-LES
-- Numéros visuellement collés ex "1228" = deux numéros distincts "12" et "28"
-- Lis de gauche à droite, ignore les cases vides, donne uniquement les numéros présents
-
-NE POSITIONNE PAS dans une grille. Donne juste les 5 numéros de chaque ligne dans l'ordre de lecture.
-
-RÉPONDS UNIQUEMENT EN JSON sans markdown ni backticks :
-{"format_detected":"6 cartons","cartons":[{"id":1,"serial":"","line1":[12,28,47,55,64],"line2":[10,33,46,77,84],"line3":[2,27,31,68,74]}]}`;
-
-    const userPrompt = `${formatHint}
-Lis TOUS les cartons visibles. Pour chaque carton donne les 3 lignes avec exactement 5 numéros chacune.
-Numéros collés visuellement = toujours deux numéros séparés. Cases vides = ignorées.`;
+    const n = selectedFormat === 'auto' ? 0 : (selectedFormat === 'privilege' ? 1 : parseInt(selectedFormat));
+    const mediaType = selectedFile.type || 'image/jpeg';
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model: 'claude-opus-4-5',
-          max_tokens: 8000,
-          system: systemPrompt,
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'image', source: { type: 'base64', media_type: selectedFile.type || 'image/jpeg', data: base64Data } },
-              { type: 'text', text: userPrompt }
-            ]
-          }]
-        })
-      });
+      let allCartons = [];
 
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error?.message || 'Erreur API ' + response.status);
+      if (n <= 6 || n === 0) {
+        // Single call for 1-6 cartons or auto
+        const label = n === 0 ? 'tous les' : n;
+        setStatus('info', `Lecture de ${label} carton(s)...`, true);
+        const cartons = await callClaude(base64Data, mediaType, n || 6, 1);
+        allCartons = cartons;
+      } else {
+        // Split into batches of 6 for 12/18/24 cartons
+        // For multi-carton sheets we call once but ask for all
+        // and parse robustly
+        setStatus('info', `Lecture de ${n} cartons (peut prendre 15-20s)...`, true);
+        const cartons = await callClaude(base64Data, mediaType, n, 1);
+        allCartons = cartons;
       }
 
-      const data = await response.json();
-      const raw = data.content.find(b => b.type === 'text')?.text || '';
+      setStatus('info', 'Reconstruction des grilles...', true);
 
-      setStatus('info', 'Validation des cartons...', true);
-
-      let parsed;
-      try {
-        const clean = raw.replace(/```json|```/g, '').trim();
-        parsed = JSON.parse(clean);
-      } catch(e) {
-        throw new Error('JSON invalide reçu. Réessaie ou essaie une image plus nette.');
-      }
-
-      parsed.cartons = parsed.cartons.map(c => {
-        if (c.line1) c = buildGridFromLines(c);
+      const processed = allCartons.map((c, i) => {
+        c.id = c.id || (i + 1);
+        c.serial = c.serial || '';
+        c = buildGridFromLines(c);
         return validateCarton(c);
       });
-      renderResults(parsed);
-      const ok = parsed.cartons.filter(c => c.valid).length;
-      setStatus('success', `✓ ${parsed.cartons.length} carton(s) lus — ${ok} valides`);
+
+      const result = {
+        format_detected: `${processed.length} carton(s)`,
+        cartons: processed
+      };
+
+      renderResults(result);
+      const ok = processed.filter(c => c.valid).length;
+      setStatus('success', `✓ ${processed.length} carton(s) lus — ${ok} valides`);
 
     } catch(e) {
       setStatus('error', '❌ ' + e.message);

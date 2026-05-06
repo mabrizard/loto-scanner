@@ -512,37 +512,23 @@
       ? 'C\'est une Carte Privilège (format carte bancaire plastifiée, un seul carton 9 colonnes × 3 lignes).'
       : `La feuille contient exactement ${selectedFormat} cartons.`;
 
-    const systemPrompt = `Tu es un expert en lecture de cartons de loto français. Tu dois lire des grilles avec une PRÉCISION ABSOLUE.
+    const systemPrompt = `Tu es un expert en lecture de cartons de loto français.
 
-RÈGLES DU LOTO FRANÇAIS — CRITIQUES :
-- Grille exactement 9 colonnes × 3 lignes = 27 cases
-- EXACTEMENT 5 numéros par ligne, 4 cases vides par ligne, 15 numéros par carton
-- Plages STRICTES par colonne (respecte la position physique dans la grille) :
-  col1=1-9 | col2=10-19 | col3=20-29 | col4=30-39 | col5=40-49 | col6=50-59 | col7=60-69 | col8=70-79 | col9=80-90
-- Aucun doublon
+RÈGLES :
+- Chaque carton contient EXACTEMENT 15 numéros : 5 par ligne, 3 lignes
+- Les numéros vont de 1 à 90, jamais de doublon
+- Cases vides = ovales gris, cases colorées, ou cases blanches sans chiffre — IGNORE-LES
+- Numéros visuellement collés ex "1228" = deux numéros distincts "12" et "28"
+- Lis de gauche à droite, ignore les cases vides, donne uniquement les numéros présents
 
-ATTENTION AUX PIÈGES FRÉQUENTS :
-1. Cases vides = ovales gris OU cases colorées OU cases blanches sans chiffre — ce sont toutes des cases VIDES (null)
-2. Numéros collés visuellement : "1228" = deux numéros séparés "12" (col2) et "28" (col3) — toujours séparer selon les colonnes
-3. Ne jamais inventer de numéros manquants — si tu n'es pas sûr d'une case, mets null
-4. La colonne détermine la plage : un "2" en col2 est forcément "2" pas "20" — lis le chiffre exact
-5. Sur les feuilles multi-cartons (6, 12, 18, 24) : chaque carton est indépendant, lis-les un par un
+NE POSITIONNE PAS dans une grille. Donne juste les 5 numéros de chaque ligne dans l'ordre de lecture.
 
-MÉTHODE DE LECTURE :
-- Pour chaque carton : identifie d'abord les 9 colonnes verticales
-- Dans chaque colonne, lis les 3 cases de haut en bas
-- Une case avec un chiffre = ce chiffre exact | une case sans chiffre visible = null
-- Vérifie : 5 numéros par ligne, pas 4 ni 6
-
-RÉPONDS UNIQUEMENT EN JSON, sans markdown, sans explication, sans backticks :
-{"format_detected":"6 cartons","cartons":[{"id":1,"serial":"","rows":[[null,12,null,null,47,55,64,null,null],[null,10,null,33,46,null,null,77,84],[2,null,27,31,null,null,68,74,null]],"valid":true,"errors":[]}]}
-Chaque row : exactement 9 valeurs (nombre ou null). errors = [].`;
+RÉPONDS UNIQUEMENT EN JSON sans markdown ni backticks :
+{"format_detected":"6 cartons","cartons":[{"id":1,"serial":"","line1":[12,28,47,55,64],"line2":[10,33,46,77,84],"line3":[2,27,31,68,74]}]}`;
 
     const userPrompt = `${formatHint}
-Lis TOUS les cartons visibles et retourne le JSON complet.
-MÉTHODE OBLIGATOIRE : pour chaque carton, identifie les 9 colonnes verticales, puis lis case par case.
-Vérifie que chaque ligne a EXACTEMENT 5 numéros avant de passer au carton suivant.
-Les numéros visuellement collés (ex: "1228") sont TOUJOURS deux numéros distincts dans deux colonnes adjacentes.`;
+Lis TOUS les cartons visibles. Pour chaque carton donne les 3 lignes avec exactement 5 numéros chacune.
+Numéros collés visuellement = toujours deux numéros séparés. Cases vides = ignorées.`;
 
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -585,7 +571,10 @@ Les numéros visuellement collés (ex: "1228") sont TOUJOURS deux numéros disti
         throw new Error('JSON invalide reçu. Réessaie ou essaie une image plus nette.');
       }
 
-      parsed.cartons = parsed.cartons.map(c => validateCarton(c));
+      parsed.cartons = parsed.cartons.map(c => {
+        if (c.line1) c = buildGridFromLines(c);
+        return validateCarton(c);
+      });
       renderResults(parsed);
       const ok = parsed.cartons.filter(c => c.valid).length;
       setStatus('success', `✓ ${parsed.cartons.length} carton(s) lus — ${ok} valides`);
@@ -595,6 +584,46 @@ Les numéros visuellement collés (ex: "1228") sont TOUJOURS deux numéros disti
     } finally {
       document.getElementById('scanBtn').disabled = false;
     }
+  }
+
+  function buildGridFromLines(carton) {
+    // Place each number in its correct column based on value range
+    const colRanges = [[1,9],[10,19],[20,29],[30,39],[40,49],[50,59],[60,69],[70,79],[80,90]];
+    const rows = [[null,null,null,null,null,null,null,null,null],
+                  [null,null,null,null,null,null,null,null,null],
+                  [null,null,null,null,null,null,null,null,null]];
+
+    function getCol(num) {
+      for (let i = 0; i < colRanges.length; i++) {
+        if (num >= colRanges[i][0] && num <= colRanges[i][1]) return i;
+      }
+      return -1;
+    }
+
+    const lines = [carton.line1 || [], carton.line2 || [], carton.line3 || []];
+    const errors = [];
+    const allNums = [];
+
+    lines.forEach((line, ri) => {
+      if (line.length !== 5) errors.push(`Ligne ${ri+1} : ${line.length} numéros lus (attendu 5)`);
+      line.forEach(num => {
+        if (num < 1 || num > 90) { errors.push(`Numéro invalide : ${num}`); return; }
+        if (allNums.includes(num)) { errors.push(`Doublon : ${num}`); return; }
+        allNums.push(num);
+        const col = getCol(num);
+        if (col === -1) { errors.push(`Numéro hors plage : ${num}`); return; }
+        if (rows[ri][col] !== null) {
+          errors.push(`Collision col ${col+1} ligne ${ri+1} : ${rows[ri][col]} et ${num}`);
+        } else {
+          rows[ri][col] = num;
+        }
+      });
+    });
+
+    carton.rows = rows;
+    carton.valid = errors.length === 0;
+    carton.errors = errors;
+    return carton;
   }
 
   function validateCarton(carton) {

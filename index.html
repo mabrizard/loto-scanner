@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Loto Scanner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #E8251A;
+    --red-dark: #B01B12;
+    --green: #2A7A3B;
+    --cream: #F9F6EE;
+    --ink: #1A1A1A;
+    --muted: #6B6B6B;
+    --border: #D4CFBF;
+    --success: #2A7A3B;
+    --warn: #C07A10;
+    --error: #C0201A;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--red);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .ball {
+    width: 38px; height: 38px;
+    background: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .header-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: white;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+  .header-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.75);
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+
+  /* API KEY BANNER */
+  .api-banner {
+    background: #FEF9C3;
+    border-bottom: 1px solid #FDE68A;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: #854D0E;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .api-banner input {
+    flex: 1;
+    min-width: 180px;
+    padding: 6px 10px;
+    border: 1px solid #FDE68A;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: monospace;
+    background: white;
+  }
+  .api-banner button {
+    padding: 6px 12px;
+    background: var(--red);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* MAIN */
+  .main {
+    padding: 20px 16px 40px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  /* UPLOAD */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    background: white;
+    padding: 28px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    position: relative;
+  }
+  .upload-zone:hover { border-color: var(--red); background: #FFF8F8; }
+  .upload-zone input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .upload-icon { font-size: 44px; margin-bottom: 10px; }
+  .upload-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .upload-sub { font-size: 13px; color: var(--muted); }
+
+  .preview-wrap {
+    margin-top: 14px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    display: none;
+    background: #f0f0f0;
+  }
+  .preview-wrap img {
+    width: 100%;
+    display: block;
+    max-height: 280px;
+    object-fit: contain;
+  }
+
+  /* FORMAT */
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 16px 0 8px;
+  }
+  .format-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .fmt-btn {
+    flex: 1;
+    min-width: 56px;
+    padding: 8px 4px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    transition: all .15s;
+    color: var(--ink);
+  }
+  .fmt-btn:hover { border-color: var(--red); }
+  .fmt-btn.active { background: var(--red); color: white; border-color: var(--red); }
+  .fmt-label { font-size: 10px; display: block; opacity: 0.75; margin-top: 1px; }
+
+  /* SCAN BTN */
+  .scan-btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--red);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: background .15s, transform .1s;
+  }
+  .scan-btn:hover { background: var(--red-dark); }
+  .scan-btn:active { transform: scale(0.98); }
+  .scan-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+
+  /* STATUS */
+  .status-bar {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    display: none;
+    align-items: center;
+    gap: 8px;
+  }
+  .status-bar.info { display: flex; background: #EFF6FF; color: #1D4ED8; }
+  .status-bar.success { display: flex; background: #F0FDF4; color: #15803D; }
+  .status-bar.error { display: flex; background: #FEF2F2; color: #B91C1C; }
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* RESULTS */
+  .results { margin-top: 24px; }
+  .results-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 1px;
+    color: var(--ink);
+    margin-bottom: 12px;
+    border-bottom: 2px solid var(--red);
+    padding-bottom: 6px;
+  }
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .sum-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+  }
+  .sum-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    line-height: 1;
+  }
+  .sum-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+  .sum-val.ok { color: var(--success); }
+  .sum-val.bad { color: var(--error); }
+  .sum-val.neutral { color: var(--ink); }
+
+  /* CARTON CARD */
+  .carton-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .carton-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--ink);
+    color: white;
+  }
+  .carton-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 1px;
+  }
+  .carton-serial { font-size: 11px; color: rgba(255,255,255,0.55); }
+  .validity-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+  }
+  .valid { background: #DCFCE7; color: #15803D; }
+  .invalid { background: #FEE2E2; color: #B91C1C; }
+  .partial { background: #FEF9C3; color: #854D0E; }
+
+  .carton-body { padding: 10px 12px; }
+
+  /* LOTO GRID */
+  .loto-grid {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 3px;
+    margin-bottom: 6px;
+  }
+  .loto-cell {
+    aspect-ratio: 1.1;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(8px, 2.2vw, 13px);
+    font-weight: 600;
+    border: 1px solid var(--border);
+  }
+  .loto-cell.has-num { background: white; color: var(--ink); }
+  .loto-cell.empty { background: #6BAE78; border-color: #5A9467; }
+  .loto-cell.error-cell { background: #FEE2E2; color: #B91C1C; border-color: #FECACA; }
+
+  .error-list {
+    font-size: 11px;
+    color: var(--warn);
+    margin-top: 6px;
+    padding: 6px 10px;
+    background: #FFFBEB;
+    border-radius: 6px;
+    border: 1px solid #FDE68A;
+  }
+
+  .json-toggle {
+    font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    text-decoration: underline;
+    margin-top: 8px;
+    display: inline-block;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .json-block {
+    display: none;
+    font-family: monospace;
+    font-size: 10px;
+    background: #F8F8F8;
+    border-radius: 6px;
+    padding: 8px;
+    margin-top: 6px;
+    overflow-x: auto;
+    color: #333;
+    white-space: pre;
+    border: 1px solid var(--border);
+  }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="ball">🎱</div>
+  <div>
+    <div class="header-title">Loto Scanner</div>
+    <div class="header-sub">Lecture automatique · 1 à 24 cartons</div>
+  </div>
+</div>
+
+<div class="api-banner" id="apiBanner">
+  <span>🔑 Clé API Anthropic :</span>
+  <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." />
+  <button onclick="saveKey()">Enregistrer</button>
+  <span id="keyStatus"></span>
+</div>
+
+<div class="main">
+  <div class="upload-zone" id="dropZone">
+    <input type="file" id="fileInput" accept="image/*" capture="environment" />
+    <div class="upload-icon">📷</div>
+    <div class="upload-title">Photo ou scan de tes cartons</div>
+    <div class="upload-sub">Appuie ici pour prendre une photo ou choisir une image</div>
+  </div>
+
+  <div class="preview-wrap" id="previewWrap">
+    <img id="previewImg" src="" alt="aperçu" />
+  </div>
+
+  <div class="section-label">Nombre de cartons sur la feuille</div>
+  <div class="format-row" id="formatRow">
+    <button class="fmt-btn active" data-n="auto">Auto<span class="fmt-label">Détecter</span></button>
+    <button class="fmt-btn" data-n="1">1<span class="fmt-label">carton</span></button>
+    <button class="fmt-btn" data-n="6">6<span class="fmt-label">cartons</span></button>
+    <button class="fmt-btn" data-n="12">12<span class="fmt-label">cartons</span></button>
+    <button class="fmt-btn" data-n="18">18<span class="fmt-label">cartons</span></button>
+    <button class="fmt-btn" data-n="24">24<span class="fmt-label">cartons</span></button>
+    <button class="fmt-btn" data-n="privilege">Carte<span class="fmt-label">Privilège</span></button>
+  </div>
+
+  <button class="scan-btn" id="scanBtn" disabled>⬆ SCANNER LES CARTONS</button>
+
+  <div class="status-bar" id="statusBar">
+    <div class="spinner" id="statusSpinner"></div>
+    <span id="statusText"></span>
+  </div>
+
+  <div class="results" id="results" style="display:none">
+    <div class="results-title" id="resultsTitle">RÉSULTATS</div>
+    <div class="summary">
+      <div class="sum-card"><div class="sum-val neutral" id="sumTotal">0</div><div class="sum-lbl">Lus</div></div>
+      <div class="sum-card"><div class="sum-val ok" id="sumOk">0</div><div class="sum-lbl">Valides</div></div>
+      <div class="sum-card"><div class="sum-val bad" id="sumErr">0</div><div class="sum-lbl">À vérifier</div></div>
+    </div>
+    <div id="cartonsList"></div>
+  </div>
+
+  <div class="footer">Loto Scanner · Powered by Claude Vision · Anthropic API</div>
+</div>
+
+<script>
+  let selectedFile = null;
+  let selectedFormat = 'auto';
+  let base64Data = null;
+  let apiKey = localStorage.getItem('loto_api_key') || '';
+
+  // Init API key display
+  if (apiKey) {
+    document.getElementById('apiKeyInput').value = apiKey;
+    document.getElementById('keyStatus').textContent = '✓ Clé enregistrée';
+    document.getElementById('keyStatus').style.color = '#15803D';
+  }
+
+  function saveKey() {
+    const val = document.getElementById('apiKeyInput').value.trim();
+    if (!val.startsWith('sk-ant')) {
+      alert('La clé doit commencer par sk-ant-...');
+      return;
+    }
+    apiKey = val;
+    localStorage.setItem('loto_api_key', val);
+    document.getElementById('keyStatus').textContent = '✓ Enregistrée';
+    document.getElementById('keyStatus').style.color = '#15803D';
+  }
+
+  // Format buttons
+  document.getElementById('formatRow').addEventListener('click', e => {
+    const btn = e.target.closest('.fmt-btn');
+    if (!btn) return;
+    document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedFormat = btn.dataset.n;
+  });
+
+  // File input
+  document.getElementById('fileInput').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) handleFile(file);
+  });
+
+  function handleFile(file) {
+    selectedFile = file;
+    const url = URL.createObjectURL(file);
+    document.getElementById('previewImg').src = url;
+    document.getElementById('previewWrap').style.display = 'block';
+    document.getElementById('scanBtn').disabled = false;
+
+    const reader = new FileReader();
+    reader.onload = ev => { base64Data = ev.target.result.split(',')[1]; };
+    reader.readAsDataURL(file);
+  }
+
+  document.getElementById('scanBtn').addEventListener('click', async () => {
+    if (!base64Data) return;
+    if (!apiKey) { alert('Entre ta clé API Anthropic en haut de la page.'); return; }
+    await runScan();
+  });
+
+  function setStatus(type, msg, showSpinner = false) {
+    const bar = document.getElementById('statusBar');
+    bar.className = 'status-bar ' + type;
+    document.getElementById('statusSpinner').style.display = showSpinner ? 'block' : 'none';
+    document.getElementById('statusText').textContent = msg;
+  }
+
+  async function runScan() {
+    document.getElementById('scanBtn').disabled = true;
+    document.getElementById('results').style.display = 'none';
+    setStatus('info', 'Envoi de l\'image à Claude Vision...', true);
+
+    const formatHint = selectedFormat === 'auto'
+      ? 'Détecte automatiquement combien de cartons sont présents (1, 6, 12, 18, ou 24).'
+      : selectedFormat === 'privilege'
+      ? 'C\'est une Carte Privilège (format carte bancaire plastifiée, un seul carton 9 colonnes × 3 lignes).'
+      : `La feuille contient exactement ${selectedFormat} cartons.`;
+
+    const systemPrompt = `Tu es un expert en lecture de cartons de loto français.
+Règles du loto français :
+- Grille 9 colonnes × 3 lignes = 27 cases
+- 5 numéros par ligne (4 cases vides), 15 numéros par carton
+- Colonne 1: 1-9 | col 2: 10-19 | col 3: 20-29 | col 4: 30-39 | col 5: 40-49 | col 6: 50-59 | col 7: 60-69 | col 8: 70-79 | col 9: 80-90
+- Aucun doublon dans un carton
+Pour les Cartes Privilège : mêmes règles, format carte bancaire.
+
+RÉPONDS UNIQUEMENT EN JSON, sans markdown, sans explication, sans backticks. Format strict :
+{"format_detected":"12 cartons","cartons":[{"id":1,"serial":"00001","rows":[[3,null,null,30,41,52,null,null,82],[null,18,null,null,null,56,64,75,85],[9,19,null,null,47,null,68,null,89]],"valid":true,"errors":[]}]}
+Chaque row : exactement 9 valeurs (nombre ou null). errors = tableau de strings.`;
+
+    const userPrompt = `${formatHint}\nLis TOUS les cartons visibles et retourne le JSON complet. Sois très précis sur chaque numéro.`;
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-opus-4-5',
+          max_tokens: 8000,
+          system: systemPrompt,
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'image', source: { type: 'base64', media_type: selectedFile.type || 'image/jpeg', data: base64Data } },
+              { type: 'text', text: userPrompt }
+            ]
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error?.message || 'Erreur API ' + response.status);
+      }
+
+      const data = await response.json();
+      const raw = data.content.find(b => b.type === 'text')?.text || '';
+
+      setStatus('info', 'Validation des cartons...', true);
+
+      let parsed;
+      try {
+        const clean = raw.replace(/```json|```/g, '').trim();
+        parsed = JSON.parse(clean);
+      } catch(e) {
+        throw new Error('JSON invalide reçu. Réessaie ou essaie une image plus nette.');
+      }
+
+      parsed.cartons = parsed.cartons.map(c => validateCarton(c));
+      renderResults(parsed);
+      const ok = parsed.cartons.filter(c => c.valid).length;
+      setStatus('success', `✓ ${parsed.cartons.length} carton(s) lus — ${ok} valides`);
+
+    } catch(e) {
+      setStatus('error', '❌ ' + e.message);
+    } finally {
+      document.getElementById('scanBtn').disabled = false;
+    }
+  }
+
+  function validateCarton(carton) {
+    const errors = [...(carton.errors || [])];
+    const ranges = [[1,9],[10,19],[20,29],[30,39],[40,49],[50,59],[60,69],[70,79],[80,90]];
+    const allNums = [];
+
+    if (!carton.rows || carton.rows.length !== 3) {
+      errors.push('Structure incorrecte : doit avoir 3 lignes');
+      carton.valid = false; carton.errors = errors; return carton;
+    }
+
+    carton.rows.forEach((row, ri) => {
+      if (!row || row.length !== 9) { errors.push(`Ligne ${ri+1} : longueur incorrecte`); return; }
+      const nums = row.filter(v => v !== null && v !== undefined);
+      if (nums.length !== 5) errors.push(`Ligne ${ri+1} : ${nums.length} numéros (attendu 5)`);
+      row.forEach((val, ci) => {
+        if (val === null || val === undefined) return;
+        const [min, max] = ranges[ci];
+        if (val < min || val > max) errors.push(`${val} en col ${ci+1} (attendu ${min}-${max})`);
+        if (allNums.includes(val)) errors.push(`Doublon : ${val}`);
+        else allNums.push(val);
+      });
+    });
+
+    carton.valid = errors.length === 0;
+    carton.errors = errors;
+    return carton;
+  }
+
+  function renderResults(parsed) {
+    const total = parsed.cartons.length;
+    const ok = parsed.cartons.filter(c => c.valid).length;
+    const bad = total - ok;
+
+    document.getElementById('sumTotal').textContent = total;
+    document.getElementById('sumOk').textContent = ok;
+    document.getElementById('sumErr').textContent = bad;
+    document.getElementById('resultsTitle').textContent = (parsed.format_detected || total + ' cartons').toUpperCase() + ' — RÉSULTATS';
+
+    const list = document.getElementById('cartonsList');
+    list.innerHTML = '';
+
+    parsed.cartons.forEach((carton, idx) => {
+      const vc = carton.valid ? 'valid' : (carton.errors.length <= 2 ? 'partial' : 'invalid');
+      const vl = carton.valid ? '✓ Valide' : (carton.errors.length <= 2 ? '⚠ Incertain' : '✗ Erreur');
+
+      const ranges = [[1,9],[10,19],[20,29],[30,39],[40,49],[50,59],[60,69],[70,79],[80,90]];
+      let gridHTML = '';
+      if (carton.rows && carton.rows.length === 3) {
+        carton.rows.forEach(row => {
+          (row || []).forEach((val, ci) => {
+            if (val === null || val === undefined) {
+              gridHTML += `<div class="loto-cell empty"></div>`;
+            } else {
+              const [min, max] = ranges[ci] || [1, 90];
+              const isErr = val < min || val > max;
+              gridHTML += `<div class="loto-cell ${isErr ? 'error-cell' : 'has-num'}">${val}</div>`;
+            }
+          });
+        });
+      }
+
+      const errHTML = carton.errors.length > 0
+        ? `<div class="error-list">⚠ ${carton.errors.slice(0,5).join(' · ')}${carton.errors.length > 5 ? ` (+ ${carton.errors.length-5} autres)` : ''}</div>` : '';
+
+      const jsonId = 'json_' + idx;
+      const card = document.createElement('div');
+      card.className = 'carton-card';
+      card.innerHTML = `
+        <div class="carton-header">
+          <div>
+            <div class="carton-num">Carton N°${carton.id || idx + 1}</div>
+            ${carton.serial ? `<div class="carton-serial">Série ${carton.serial}</div>` : ''}
+          </div>
+          <span class="validity-badge ${vc}">${vl}</span>
+        </div>
+        <div class="carton-body">
+          <div class="loto-grid">${gridHTML}</div>
+          ${errHTML}
+          <button class="json-toggle" onclick="toggleJson('${jsonId}')">Voir JSON brut</button>
+          <div class="json-block" id="${jsonId}">${JSON.stringify(carton, null, 2)}</div>
+        </div>
+      `;
+      list.appendChild(card);
+    });
+
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function toggleJson(id) {
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === 'block' ? 'none' : 'block';
+  }
+</script>
+</body>
+</html>

@@ -377,8 +377,8 @@ function renderCartonCard(carton, idx) {
     editorRows += '<div class="erow"><span class="erlbl">' + lbl + '</span>' + inputs + '</div>';
   });
 
-  var editSection = carton.valid ? '' :
-    '<button class="edit-btn" onclick="toggleEditor(\'ep_' + idx + '\')">Corriger ce carton</button>' +
+  var editSection =
+    '<button class="edit-btn" onclick="toggleEditor(\'ep_' + idx + '\')">' + (carton.valid ? 'Verifier / Corriger' : 'Corriger ce carton') + '</button>' +
     '<div class="editor-panel" id="ep_' + idx + '">' +
     '<div class="editor-label">5 numeros par ligne — corrige puis valide</div>' +
     editorRows +
